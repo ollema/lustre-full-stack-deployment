@@ -1,14 +1,31 @@
-FROM ghcr.io/gleam-lang/gleam:v1.2.1-erlang-alpine
+ARG GLEAM_VERSION=v1.2.1
+
+FROM ghcr.io/gleam-lang/gleam:${GLEAM_VERSION}-erlang-alpine AS builder
 
 # Add project code
 COPY ./common /build/common
+COPY ./client /build/client
 COPY ./server /build/server
 
-# Compile the project
+# NOTE: This step is normally not needed and should not be included in the guide
+RUN cd /build/common \
+  && gleam run -m lustre/dev build component common/counter \ 
+  && mkdir -p /build/server/priv/static/ \
+  && cp /build/common/priv/static/counter.mjs /build/server/priv/static/counter.mjs
+
+# Compile the client code
+RUN cd /build/client \
+  && gleam run -m lustre/dev build app --outdir=/build/server/priv/static
+
+# Compile the server code
 RUN cd /build/server \
-  && gleam export erlang-shipment \
-  && mv build/erlang-shipment /app \
-  && rm -r /build
+  && gleam export erlang-shipment
+
+# Start from a clean slate
+FROM ghcr.io/gleam-lang/gleam:${GLEAM_VERSION}-erlang-alpine
+
+# Copy the compiled server code from the builder stage
+COPY --from=builder /build/server/build/erlang-shipment /app
 
 # Run the server
 WORKDIR /app

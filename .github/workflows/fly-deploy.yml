@@ -1,11 +1,12 @@
-name: Fly Deploy
+name: Deploy to Fly.io
 on:
   push:
     branches:
       - main
+
 jobs:
   deploy:
-    name: Deploy app
+    name: Deploy to Fly.io
     runs-on: ubuntu-latest
     concurrency: deploy-group
     steps:
