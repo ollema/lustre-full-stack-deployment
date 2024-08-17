@@ -9,9 +9,7 @@ COPY ./server /build/server
 
 # NOTE: This step is normally not needed and should not be included in the guide
 RUN cd /build/common \
-  && gleam run -m lustre/dev build component common/counter \ 
-  && mkdir -p /build/server/priv/static/ \
-  && cp /build/common/priv/static/counter.mjs /build/server/priv/static/counter.mjs
+  && gleam run -m lustre/dev build component common/counter --outdir=/build/server/priv/static
 
 # Compile the client code
 RUN cd /build/client \
